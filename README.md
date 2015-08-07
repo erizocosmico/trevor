@@ -33,6 +33,8 @@ To create a plugin you just have to implement the [Plugin](http://godoc.org/gith
 But thing that there is also a search plugin. Neither of the aforementioned plugins could return an exact match for the text "lost" because maybe the user is not looking for shows.
 **TL;DR:** think your plugins very well to work nice with other plugins.
 
+Check out [trevor-plugins](https://github.com/mvader/trevor-plugins) for reference plugins.
+
 ## Example
 
 Example implementation. We consider a fictional plugin `movie` that lives in `github.com/trevor/movie` (this plugin does not actually exist).
