@@ -32,3 +32,27 @@ To create a plugin you just have to implement the [Plugin](http://godoc.org/gith
 * Only return an exact match if it really is an exact match and you know no other plugin could have a better result. If the result is an exact match it will be on top of all other results. For example, if you search for a movie called "Lost" and you have a movie called "Lost puppies" don't return an exact match because the shows plugin will have a "Lost" show that really is an exact match.
 But thing that there is also a search plugin. Neither of the aforementioned plugins could return an exact match for the text "lost" because maybe the user is not looking for shows.
 **TL;DR:** think your plugins very well to work nice with other plugins.
+
+## Example
+
+Example implementation. We consider a fictional plugin `movie` that lives in `github.com/trevor/movie` (this plugin does not actually exist).
+
+```go
+package main
+
+import (
+  "github.com/mvader/trevor"
+  "github.com/trevor/movie"
+)
+
+func main() {
+  server := trevor.NewServer(trevor.Config{
+    Plugins: []trevor.Plugin(NewMovie()),
+    Port:    8888,
+  })
+
+  server.Run()
+}
+```
+
+See? Easy peasy.
