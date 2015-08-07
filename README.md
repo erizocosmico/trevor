@@ -49,7 +49,7 @@ import (
 
 func main() {
   server := trevor.NewServer(trevor.Config{
-    Plugins: []trevor.Plugin(NewMovie()),
+    Plugins: []trevor.Plugin{NewMovie()},
     Port:    8888,
   })
 
