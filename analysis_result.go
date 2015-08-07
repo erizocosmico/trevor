@@ -1,9 +1,6 @@
 package trevor
 
-import (
-	"errors"
-	"sort"
-)
+import "sort"
 
 type analysisResult struct {
 	score        float64
@@ -65,10 +62,6 @@ func sortAnalysisResults(results []analysisResult) {
 }
 
 func getBestResult(results []analysisResult) analysisResult {
-	if len(results) == 0 {
-		panic(errors.New("can't get the best result of an empty list"))
-	}
-
 	sortAnalysisResults(results)
 	return results[0]
 }

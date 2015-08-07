@@ -46,9 +46,5 @@ func (e *engine) Process(text string) (string, interface{}, error) {
 	}
 
 	data, err := chosenPlugin.Process(text)
-	if err != nil {
-		return chosenPlugin.Name(), nil, err
-	}
-
-	return chosenPlugin.Name(), data, nil
+	return chosenPlugin.Name(), data, err
 }

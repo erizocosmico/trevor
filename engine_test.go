@@ -64,6 +64,17 @@ func TestProcess(t *testing.T) {
 	}
 }
 
+func TestProcessNoPlugins(t *testing.T) {
+	engine := NewEngine()
+	engine.SetPlugins(make([]Plugin, 0))
+
+	_, _, err := engine.Process("how are you?")
+
+	if err == nil {
+		t.Error("expected error!")
+	}
+}
+
 func dummyPlugins() []Plugin {
 	return []Plugin{&salutePlugin{}, &fooPlugin{}}
 }

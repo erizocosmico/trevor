@@ -11,8 +11,9 @@ import (
 
 func TestRun(t *testing.T) {
 	server := NewServer(Config{
-		Plugins: dummyPlugins(),
-		Port:    8888,
+		Plugins:  dummyPlugins(),
+		Port:     8888,
+		Endpoint: "get_data",
 	})
 
 	go func() {
@@ -22,7 +23,7 @@ func TestRun(t *testing.T) {
 	time.Sleep(5 * time.Millisecond)
 
 	jsonStr := []byte(`{"text":"how are you?"}`)
-	req, err := http.NewRequest("POST", "http://0.0.0.0:8888/process", bytes.NewBuffer(jsonStr))
+	req, err := http.NewRequest("POST", "http://0.0.0.0:8888/get_data", bytes.NewBuffer(jsonStr))
 	if err != nil {
 		panic(err)
 	}
