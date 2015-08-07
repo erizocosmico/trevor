@@ -67,3 +67,11 @@ func TestRunTextEmpty(t *testing.T) {
 		t.Errorf("expected status 400, got %s", status)
 	}
 }
+
+func TestRunPluginError(t *testing.T) {
+	_, status := makeRequest(`{"text":"foo"}`)
+
+	if status != "400 Bad Request" {
+		t.Errorf("expected status 400, got %s", status)
+	}
+}

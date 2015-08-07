@@ -1,6 +1,7 @@
 package trevor
 
 import (
+	"errors"
 	"strings"
 	"testing"
 )
@@ -9,7 +10,7 @@ type salutePlugin struct{}
 
 func (p *salutePlugin) Analyze(text string) Score {
 	if "how are you?" == strings.ToLower(text) {
-		return NewScore(10, true)
+		return NewScore(9, true)
 	} else {
 		return NewScore(0, false)
 	}
@@ -34,7 +35,7 @@ func (p *fooPlugin) Analyze(text string) Score {
 }
 
 func (p *fooPlugin) Process(text string) (interface{}, error) {
-	return "foo", nil
+	return nil, errors.New("i always throw error")
 }
 
 func (p *fooPlugin) Name() string {
