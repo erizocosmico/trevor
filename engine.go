@@ -21,6 +21,7 @@ func NewEngine() Engine {
 }
 
 func (e *engine) SetPlugins(plugins []Plugin) {
+	SortPlugins(plugins)
 	e.plugins = plugins
 }
 

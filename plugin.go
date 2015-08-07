@@ -1,5 +1,7 @@
 package trevor
 
+import "sort"
+
 // Plugin defines the base functionality that a trevor plugin should have
 type Plugin interface {
 	// Analyze takes a string with the text and after specific analysis returns
@@ -14,4 +16,23 @@ type Plugin interface {
 
 	// Precedence gets the current precedence of the plugin
 	Precedence() int
+}
+
+type byPluginPrecedence []Plugin
+
+func (b byPluginPrecedence) Len() int {
+	return len(b)
+}
+
+func (b byPluginPrecedence) Swap(i, j int) {
+	b[i], b[j] = b[j], b[i]
+}
+
+func (b byPluginPrecedence) Less(i, j int) bool {
+	return b[i].Precedence() > b[j].Precedence()
+}
+
+// SortPlugins sorts all plugins in an array by precedence
+func SortPlugins(plugins []Plugin) {
+	sort.Sort(byPluginPrecedence(plugins))
 }
