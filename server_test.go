@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func TestRun(t *testing.T) {
+func makeRequest(text string) (string, string) {
 	server := NewServer(Config{
 		Plugins:  dummyPlugins(),
 		Port:     8888,
@@ -22,7 +22,7 @@ func TestRun(t *testing.T) {
 
 	time.Sleep(5 * time.Millisecond)
 
-	jsonStr := []byte(`{"text":"how are you?"}`)
+	jsonStr := []byte(text)
 	req, err := http.NewRequest("POST", "http://0.0.0.0:8888/get_data", bytes.NewBuffer(jsonStr))
 	if err != nil {
 		panic(err)
@@ -35,13 +35,35 @@ func TestRun(t *testing.T) {
 		panic(err)
 	}
 	defer resp.Body.Close()
+	body, _ := ioutil.ReadAll(resp.Body)
 
-	if resp.Status != "200 OK" {
-		t.Errorf("expected status 200, got %s", resp.Status)
+	return string(body), resp.Status
+}
+
+func TestRun(t *testing.T) {
+	body, status := makeRequest(`{"text":"how are you?"}`)
+
+	if status != "200 OK" {
+		t.Errorf("expected status 200, got %s", status)
 	}
 
-	body, _ := ioutil.ReadAll(resp.Body)
-	if strings.TrimSpace(string(body)) != `{"data":"fine, and you?","error":false,"type":"salute"}` {
+	if strings.TrimSpace(body) != `{"data":"fine, and you?","error":false,"type":"salute"}` {
 		t.Error("invalid response got")
+	}
+}
+
+func TestRunNoText(t *testing.T) {
+	_, status := makeRequest(`{"foo":"bar"}`)
+
+	if status != "400 Bad Request" {
+		t.Errorf("expected status 400, got %s", status)
+	}
+}
+
+func TestRunTextEmpty(t *testing.T) {
+	_, status := makeRequest(`{"text":""}`)
+
+	if status != "400 Bad Request" {
+		t.Errorf("expected status 400, got %s", status)
 	}
 }
