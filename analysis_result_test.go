@@ -26,12 +26,12 @@ func Test_getBestResult(t *testing.T) {
 }
 
 func getTestCases() ([]analysisResult, []analysisResult) {
-	phrases := newAnalysisResult(1.0, false, 1, "phrases")
-	movies := newAnalysisResult(1.5, false, 1, "movies")
-	gifs := newAnalysisResult(1.5, true, 2, "gifs")
-	maps := newAnalysisResult(0.5, false, 1, "maps")
-	pictures := newAnalysisResult(1.5, true, 3, "pictures")
-	jokes := newAnalysisResult(1.5, false, 2, "jokes")
+	phrases := newAnalysisResult(1.0, false, 1, "phrases", nil)
+	movies := newAnalysisResult(1.5, false, 1, "movies", nil)
+	gifs := newAnalysisResult(1.5, true, 2, "gifs", nil)
+	maps := newAnalysisResult(0.5, false, 1, "maps", nil)
+	pictures := newAnalysisResult(1.5, true, 3, "pictures", nil)
+	jokes := newAnalysisResult(1.5, false, 2, "jokes", nil)
 
 	input := []analysisResult{
 		phrases, movies, gifs, maps, pictures, jokes,

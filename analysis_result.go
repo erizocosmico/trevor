@@ -7,10 +7,11 @@ type analysisResult struct {
 	isExactMatch bool
 	precedence   int
 	name         string
+	metadata     interface{}
 }
 
-func newAnalysisResult(score float64, isExactMatch bool, precedence int, name string) analysisResult {
-	return analysisResult{score: score, isExactMatch: isExactMatch, precedence: precedence, name: name}
+func newAnalysisResult(score float64, isExactMatch bool, precedence int, name string, metadata interface{}) analysisResult {
+	return analysisResult{score: score, isExactMatch: isExactMatch, precedence: precedence, name: name, metadata: metadata}
 }
 
 type byMatch []analysisResult

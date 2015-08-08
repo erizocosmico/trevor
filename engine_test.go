@@ -8,15 +8,15 @@ import (
 
 type salutePlugin struct{}
 
-func (p *salutePlugin) Analyze(text string) Score {
+func (p *salutePlugin) Analyze(text string) (Score, interface{}) {
 	if "how are you?" == strings.ToLower(text) {
-		return NewScore(9, true)
+		return NewScore(9, true), nil
 	} else {
-		return NewScore(0, false)
+		return NewScore(0, false), nil
 	}
 }
 
-func (p *salutePlugin) Process(text string) (interface{}, error) {
+func (p *salutePlugin) Process(text string, _ interface{}) (interface{}, error) {
 	return "fine, and you?", nil
 }
 
@@ -30,11 +30,11 @@ func (p *salutePlugin) Precedence() int {
 
 type fooPlugin struct{}
 
-func (p *fooPlugin) Analyze(text string) Score {
-	return NewScore(5, false)
+func (p *fooPlugin) Analyze(text string) (Score, interface{}) {
+	return NewScore(5, false), nil
 }
 
-func (p *fooPlugin) Process(text string) (interface{}, error) {
+func (p *fooPlugin) Process(text string, _ interface{}) (interface{}, error) {
 	return nil, errors.New("i always throw error")
 }
 

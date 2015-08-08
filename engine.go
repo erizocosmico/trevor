@@ -32,8 +32,8 @@ func (e *engine) Process(text string) (string, interface{}, error) {
 
 	results := make([]analysisResult, len(e.plugins))
 	for i, plugin := range e.plugins {
-		score := plugin.Analyze(text)
-		results[i] = newAnalysisResult(score.Score(), score.IsExactMatch(), plugin.Precedence(), plugin.Name())
+		score, metadata := plugin.Analyze(text)
+		results[i] = newAnalysisResult(score.Score(), score.IsExactMatch(), plugin.Precedence(), plugin.Name(), metadata)
 	}
 
 	bestResult := getBestResult(results)
@@ -46,6 +46,6 @@ func (e *engine) Process(text string) (string, interface{}, error) {
 		}
 	}
 
-	data, err := chosenPlugin.Process(text)
+	data, err := chosenPlugin.Process(text, bestResult.metadata)
 	return chosenPlugin.Name(), data, err
 }
