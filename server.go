@@ -28,6 +28,7 @@ type server struct {
 
 func NewServer(config Config) Server {
 	engine := NewEngine()
+	engine.SetServices(config.Services)
 	engine.SetPlugins(config.Plugins)
 
 	return &server{

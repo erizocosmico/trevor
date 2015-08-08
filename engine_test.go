@@ -6,6 +6,10 @@ import (
 	"testing"
 )
 
+//
+// Test plugins
+//
+
 type salutePlugin struct{}
 
 func (p *salutePlugin) Analyze(text string) (Score, interface{}) {
@@ -46,6 +50,62 @@ func (p *fooPlugin) Precedence() int {
 	return 1
 }
 
+type barPlugin struct {
+	service *barService
+}
+
+func (p *barPlugin) Analyze(text string) (Score, interface{}) {
+	return NewScore(0, false), nil
+}
+
+func (p *barPlugin) Process(text string, _ interface{}) (interface{}, error) {
+	return nil, nil
+}
+
+func (p *barPlugin) Name() string {
+	return "bar"
+}
+
+func (p *barPlugin) Precedence() int {
+	return 1
+}
+
+func (p *barPlugin) NeededServices() []string {
+	return []string{"bar"}
+}
+
+func (p *barPlugin) SetService(name string, service Service) {
+	if name == "bar" {
+		p.service = service.(*barService)
+	}
+}
+
+//
+// Test services
+//
+
+type fooService struct{}
+
+func (s *fooService) Name() string {
+	return "foo"
+}
+
+func (s *fooService) SetName(_ string) {
+}
+
+type barService struct{}
+
+func (s *barService) Name() string {
+	return "bar"
+}
+
+func (s *barService) SetName(_ string) {
+}
+
+//
+// Tests
+//
+
 func TestProcess(t *testing.T) {
 	engine := NewEngine()
 	engine.SetPlugins(dummyPlugins())
@@ -76,6 +136,47 @@ func TestProcessNoPlugins(t *testing.T) {
 	}
 }
 
+func TestSetServices(t *testing.T) {
+	e := NewEngine().(*engine)
+	e.SetServices(dummyServices())
+
+	for _, s := range []string{"foo", "bar"} {
+		if service, ok := e.services[s]; !ok || service.Name() != s {
+			t.Errorf("expected to find %s service", s)
+		}
+	}
+}
+
+func TestInjectServices(t *testing.T) {
+	e := NewEngine().(*engine)
+	e.SetServices([]Service{&barService{}})
+	e.SetPlugins([]Plugin{&barPlugin{}})
+
+	plugin := e.plugins[0].(*barPlugin)
+	if plugin.service == nil || plugin.service.Name() != "bar" {
+		t.Errorf("expected to find service bar in bar plugin")
+	}
+}
+
+func TestInjectServicesServiceUnknown(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("expected a panic!")
+		}
+	}()
+
+	e := NewEngine()
+	e.SetPlugins([]Plugin{&barPlugin{}})
+}
+
+//
+// Helper functions
+//
+
 func dummyPlugins() []Plugin {
 	return []Plugin{&salutePlugin{}, &fooPlugin{}}
+}
+
+func dummyServices() []Service {
+	return []Service{&fooService{}, &barService{}}
 }

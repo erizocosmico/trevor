@@ -1,10 +1,16 @@
 package trevor
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 type Engine interface {
 	// SetPlugins sets the list of plugins of the engine.
 	SetPlugins([]Plugin)
+
+	// SetServices sets the list of services of the engine.
+	SetServices([]Service)
 
 	// Process takes the text to process and returns the name of the plugin that
 	// processed the text and the data returned by it.
@@ -12,17 +18,41 @@ type Engine interface {
 }
 
 type engine struct {
-	plugins []Plugin
+	plugins  []Plugin
+	services map[string]Service
 }
 
 // NewEngine creates a new Engine instance
 func NewEngine() Engine {
-	return &engine{}
+	return &engine{services: map[string]Service{}}
 }
 
 func (e *engine) SetPlugins(plugins []Plugin) {
 	SortPlugins(plugins)
-	e.plugins = plugins
+	e.plugins = e.injectServices(plugins)
+}
+
+func (e *engine) SetServices(services []Service) {
+	for _, service := range services {
+		e.services[service.Name()] = service
+	}
+}
+
+func (e *engine) injectServices(plugins []Plugin) []Plugin {
+	for _, plugin := range plugins {
+		if injectablePlugin, ok := plugin.(InjectablePlugin); ok {
+			for _, serviceName := range injectablePlugin.NeededServices() {
+				service, ok := e.services[serviceName]
+				if !ok {
+					panic(fmt.Sprintf("unknown service with name: %s", serviceName))
+				}
+
+				injectablePlugin.SetService(serviceName, service)
+			}
+		}
+	}
+
+	return plugins
 }
 
 func (e *engine) Process(text string) (string, interface{}, error) {

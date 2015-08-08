@@ -18,6 +18,15 @@ type Plugin interface {
 	Precedence() int
 }
 
+// InjectablePlugin is a plugin that requests dependency injection
+type InjectablePlugin interface {
+	// NeededServices returns an array with the name of all needed services.
+	NeededServices() []string
+
+	// SetService injects a service to the plugin
+	SetService(string, Service)
+}
+
 type byPluginPrecedence []Plugin
 
 func (b byPluginPrecedence) Len() int {
