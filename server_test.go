@@ -85,3 +85,14 @@ func TestGetEngine(t *testing.T) {
 	})
 	server.GetEngine()
 }
+
+// Just for code coverage too
+func TestRunSecure(t *testing.T) {
+	server := NewServer(Config{
+		Plugins:  dummyPlugins(),
+		Port:     8888,
+		Endpoint: "get_data",
+		Secure:   true,
+	})
+	server.Run()
+}
