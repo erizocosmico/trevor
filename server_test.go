@@ -75,3 +75,13 @@ func TestRunPluginError(t *testing.T) {
 		t.Errorf("expected status 400, got %s", status)
 	}
 }
+
+// This is just for code coverage
+func TestGetEngine(t *testing.T) {
+	server := NewServer(Config{
+		Plugins:  dummyPlugins(),
+		Port:     8888,
+		Endpoint: "get_data",
+	})
+	server.GetEngine()
+}

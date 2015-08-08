@@ -29,7 +29,7 @@ func (p *salutePlugin) Name() string {
 }
 
 func (p *salutePlugin) Precedence() int {
-	return 1
+	return 2
 }
 
 type fooPlugin struct{}
@@ -174,7 +174,7 @@ func TestInjectServicesServiceUnknown(t *testing.T) {
 //
 
 func dummyPlugins() []Plugin {
-	return []Plugin{&salutePlugin{}, &fooPlugin{}}
+	return []Plugin{&fooPlugin{}, &salutePlugin{}}
 }
 
 func dummyServices() []Service {

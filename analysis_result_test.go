@@ -34,7 +34,7 @@ func getTestCases() ([]analysisResult, []analysisResult) {
 	jokes := newAnalysisResult(1.5, false, 2, "jokes", nil)
 
 	input := []analysisResult{
-		phrases, movies, gifs, maps, pictures, jokes,
+		phrases, movies, jokes, maps, pictures, gifs,
 	}
 
 	expected := []analysisResult{
