@@ -37,7 +37,7 @@ Check out [trevor-plugins](https://github.com/mvader/trevor-plugins) for referen
 
 ## Example
 
-Example implementation. We consider a fictional plugin `movie` that lives in `github.com/trevor/movie` (this plugin does not actually exist).
+Example implementation. We consider a fictional plugin `randomMovie` that lives in `github.com/trevor/movie` (this plugin does not actually exist).
 
 ```go
 package main
@@ -49,7 +49,7 @@ import (
 
 func main() {
   server := trevor.NewServer(trevor.Config{
-    Plugins: []trevor.Plugin{NewMovie()},
+    Plugins: []trevor.Plugin{movie.NewRandomMovie()},
     Port:    8888,
   })
 
