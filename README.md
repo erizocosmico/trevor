@@ -1,4 +1,7 @@
-# trevor [![Build Status](https://travis-ci.org/mvader/trevor.svg)](https://travis-ci.org/mvader/trevor) [![Coverage Status](https://coveralls.io/repos/mvader/trevor/badge.svg?branch=master&service=github)](https://coveralls.io/github/mvader/trevor?branch=master) [![GoDoc](https://godoc.org/github.com/mvader/trevor?status.svg)](http://godoc.org/github.com/mvader/trevor)
+![trevor](https://raw.githubusercontent.com/mvader/trevor/master/trevor.png)
+
+[![Build Status](https://travis-ci.org/mvader/trevor.svg)](https://travis-ci.org/mvader/trevor) [![Coverage Status](https://coveralls.io/repos/mvader/trevor/badge.svg?branch=master&service=github)](https://coveralls.io/github/mvader/trevor?branch=master) [![GoDoc](https://godoc.org/github.com/mvader/trevor?status.svg)](http://godoc.org/github.com/mvader/trevor)
+
 Trevor is an extensible framework to build [knowledge navigators](https://en.wikipedia.org/wiki/Knowledge_navigator) through custom plugins.
 
 In brief, you could build a Siri-like or Google Now-like API (without the voice recognition layer) for you app. Trevor only provides the framework to build it.
