@@ -78,6 +78,8 @@ func (s *server) Run() {
 		})
 	})
 
+	s.engine.SchedulePokes()
+
 	addr := fmt.Sprintf("%s:%d", s.config.Host, s.config.Port)
 	if !s.config.Secure {
 		router.Run(addr)

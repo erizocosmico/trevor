@@ -15,6 +15,9 @@ type Engine interface {
 	// Process takes the text to process and returns the name of the plugin that
 	// processed the text and the data returned by it.
 	Process(string) (string, interface{}, error)
+
+	// SchedulePokes schedules all pokes to run indefinitely.
+	SchedulePokes()
 }
 
 type engine struct {
@@ -78,4 +81,19 @@ func (e *engine) Process(text string) (string, interface{}, error) {
 
 	data, err := chosenPlugin.Process(text, bestResult.metadata)
 	return chosenPlugin.Name(), data, err
+}
+
+func (e *engine) SchedulePokes() {
+	for _, pp := range PokablePlugins(e.plugins) {
+		go RunPokeWorker(pp)
+	}
+
+	var services = make([]Service, 0, len(e.services))
+	for _, service := range e.services {
+		services = append(services, service)
+	}
+
+	for _, ps := range PokableServices(services) {
+		go RunPokeWorker(ps)
+	}
 }

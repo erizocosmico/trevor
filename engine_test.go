@@ -4,6 +4,7 @@ import (
 	"errors"
 	"strings"
 	"testing"
+	"time"
 )
 
 //
@@ -32,7 +33,9 @@ func (p *salutePlugin) Precedence() int {
 	return 2
 }
 
-type fooPlugin struct{}
+type fooPlugin struct {
+	poked int
+}
 
 func (p *fooPlugin) Analyze(text string) (Score, interface{}) {
 	return NewScore(5, false), nil
@@ -84,7 +87,9 @@ func (p *barPlugin) SetService(name string, service Service) {
 // Test services
 //
 
-type fooService struct{}
+type fooService struct {
+	poked int
+}
 
 func (s *fooService) Name() string {
 	return "foo"
@@ -167,6 +172,24 @@ func TestInjectServicesServiceUnknown(t *testing.T) {
 
 	e := NewEngine()
 	e.SetPlugins([]Plugin{&barPlugin{}})
+}
+
+func TestSchedulePokes(t *testing.T) {
+	e := NewEngine().(*engine)
+	e.SetPlugins([]Plugin{&fooPlugin{}})
+	e.SetServices([]Service{&fooService{}})
+
+	e.SchedulePokes()
+
+	time.Sleep(5 * time.Second)
+
+	if e.plugins[0].(*fooPlugin).poked < 4 {
+		t.Errorf("plugin should have been poked at least 4 times")
+	}
+
+	if e.services["foo"].(*fooService).poked < 3 {
+		t.Errorf("service should have been poked 3 times")
+	}
 }
 
 //
