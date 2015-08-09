@@ -71,6 +71,15 @@ All it is asked for a service to implement is `Name` and `SetName` methods. The 
 **Considerations:**
 Use an unique name for the service. If you use the name "cache" it will sure clash with another service. Imagine a `RedisCacheService` and a `MemcachedCacheService`. If both are named `cache` only the last one added will be available in the engine. In that case, they should be named `redis_cache` and `memcached_cache`. Then, if the user wants to use them as `cache` they can be renamed with the `SetName` method.
 
+## Pokables
+
+A `Pokable` in trevor is a component (a plugin or a service) that will be [poked](http://www.wanapesa.com/poke/img/94888877_o.png) in intervals defined by the same pokable.
+To make a `Plugin` or a `Service` pokable the only thing you need to do is implement the [Pokable](http://godoc.org/github.com/mvader/trevor#Pokable) interface. 
+
+The motivation for the pokables is to have a centralized scheduler that will call the component every X time. That eliminates the need to have workers in most cases. For example, imagine you have a service that needs a configuration from a server but that configuration changes every 24 hours. You could implement a goroutine that fetches that configuration every 24 hours but that should not be a responsability of the service. Instead, you could make the service pokable and every 24 hours (if you define that interval in your implementation) the `Poke` method will be called. That way, your service does no longer have the responsability of spawning a goroutine to fetch periodically the configuration.
+
+All poking goroutines are spawned when the server `Run` method is called.
+
 ## Example
 
 Example implementation. We consider a fictional plugin `randomMovie` that lives in `github.com/trevor/movie` (this plugin does not actually exist). We also consider another fictional `cacheService` service that lives in `github.com/trevor/cache`.
