@@ -23,21 +23,59 @@ In brief, you could build a Siri-like or Google Now-like API (without the voice 
 }
 ```
 
-## Working with plugins
+## Create plugins
 
 To create a plugin you just have to implement the [Plugin](http://godoc.org/github.com/mvader/trevor#Plugin) interface.
 
 **Considerations:**
-* Though there are no limits for the score (only that it has to be a float64) it is recommended to use a range of numbers consistent across all plugins. **The recommended range is [0, 10]**.
+* Even though there are no limits for the score (only that it has to be a float64) it is recommended to use a range of numbers consistent across all plugins. **The recommended range is [0, 10]**.
 * Only return an exact match if it really is an exact match and you know no other plugin could have a better result. If the result is an exact match it will be on top of all other results. For example, if you search for a movie called "Lost" and you have a movie called "Lost puppies" don't return an exact match because the shows plugin will have a "Lost" show that really is an exact match.
 But thing that there is also a search plugin. Neither of the aforementioned plugins could return an exact match for the text "lost" because maybe the user is not looking for shows.
 **TL;DR:** think your plugins very well to work nice with other plugins.
 
 Check out [trevor-plugins](https://github.com/mvader/trevor-plugins) for reference plugins.
 
+### Injectable pugins
+
+A plugin may need some services to run. Maybe even two plugins need the same service. Instead of implementing each service in your own plugin trevor provides a mechanism to register services on the engine.
+Using injectable plugins a plugin receives on startup time all the services it needs to work. To convert a plugin to an injectable plugin you just need to implement the [InjectablePlugin](http://godoc.org/github.com/mvader/trevor#InjectablePlugin) interface.
+
+Basically, you implement the `NeededServices` method that returns a list with the names of all services needed by the plugin.
+When the engine is started it will try to find those services and inject them to the plugin using the `SetPlugin` method of the plugin.
+
+Note that only one service is injected at a time. If your plugin needs 4 services, the `SetPlugin` method will be called 4 times, every time with a different service.
+
+Plugins receive a `trevor.Service`, you will have to cast them to the right type of the service you are using.
+**Example:**
+
+```go
+func (p *myPlugin) SetService(name string, service trevor.Service) {
+  switch name {
+  case "redis_cache":
+    p.redisService = service.(*MyRedisCacheService)
+  break;
+  
+  case "memcached_cache":
+    p.memcachedService = service.(*MyMemcachedCacheService)
+  break;
+  }
+}
+```
+
+## Create services
+
+To create a service you just have to implement the [Service](http://godoc.org/github.com/mvader/trevor#Service) interface.
+
+All it is asked for a service to implement is `Name` and `SetName` methods. The rest is up to the developer of the service.
+
+**Considerations:**
+Use an unique name for the service. If you use the name "cache" it will sure clash with another service. Imagine a `RedisCacheService` and a `MemcachedCacheService`. If both are named `cache` only the last one added will be available in the engine. In that case, they should be named `redis_cache` and `memcached_cache`. Then, if the user wants to use them as `cache` they can be renamed with the `SetName` method.
+
 ## Example
 
-Example implementation. We consider a fictional plugin `randomMovie` that lives in `github.com/trevor/movie` (this plugin does not actually exist).
+Example implementation. We consider a fictional plugin `randomMovie` that lives in `github.com/trevor/movie` (this plugin does not actually exist). We also consider another fictional `cacheService` service that lives in `github.com/trevor/cache`.
+
+**Note**: we use the service as it is. That means that its name is the one assigned by the person who created the service. If we know it might clash with another plugin you can always change it with the method `SetName` that every plugin has.
 
 ```go
 package main
@@ -45,11 +83,13 @@ package main
 import (
   "github.com/mvader/trevor"
   "github.com/trevor/movie"
+  "github.com/trevor/cache"
 )
 
 func main() {
   server := trevor.NewServer(trevor.Config{
     Plugins: []trevor.Plugin{movie.NewRandomMovie()},
+    Services: []trevor.Service{cache.NewCacheService()},
     Port:    8888,
   })
 
