@@ -25,4 +25,7 @@ type Config struct {
 
 	// CertPerm is the cert for the SSL
 	CertPerm string
+
+	// Analyzer is the function used as a analyzer for choosing the adequate plugin for the request
+	Analyzer Analyzer
 }

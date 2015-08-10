@@ -192,6 +192,20 @@ func TestSchedulePokes(t *testing.T) {
 	}
 }
 
+func TestAnalyzer(t *testing.T) {
+	e := NewEngine().(*engine)
+	e.SetPlugins(dummyPlugins())
+	e.SetServices(dummyServices())
+	e.SetAnalyzer(func(text string) (string, interface{}) {
+		return "foo", nil
+	})
+
+	plugin, data, err := e.Process("how are you?")
+	if err == nil || data != nil || plugin != "foo" {
+		t.Errorf("expected foo plugin to process but %s plugin did", plugin)
+	}
+}
+
 //
 // Helper functions
 //

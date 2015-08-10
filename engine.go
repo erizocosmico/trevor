@@ -12,6 +12,9 @@ type Engine interface {
 	// SetServices sets the list of services of the engine.
 	SetServices([]Service)
 
+	// SetAnalyzer sets the Analyzer function of the engine.
+	SetAnalyzer(Analyzer)
+
 	// Process takes the text to process and returns the name of the plugin that
 	// processed the text and the data returned by it.
 	Process(string) (string, interface{}, error)
@@ -20,9 +23,13 @@ type Engine interface {
 	SchedulePokes()
 }
 
+// Analyzer is a function that takes a string (the text to process) and returns the name of the plugin that should process it and metadata.
+type Analyzer func(string) (string, interface{})
+
 type engine struct {
 	plugins  []Plugin
 	services map[string]Service
+	analyzer Analyzer
 }
 
 // NewEngine creates a new Engine instance
@@ -39,6 +46,10 @@ func (e *engine) SetServices(services []Service) {
 	for _, service := range services {
 		e.services[service.Name()] = service
 	}
+}
+
+func (e *engine) SetAnalyzer(analyzer Analyzer) {
+	e.analyzer = analyzer
 }
 
 func (e *engine) injectServices(plugins []Plugin) []Plugin {
@@ -63,13 +74,22 @@ func (e *engine) Process(text string) (string, interface{}, error) {
 		return "", nil, errors.New("no plugins found. can't process anything")
 	}
 
-	results := make([]analysisResult, len(e.plugins))
-	for i, plugin := range e.plugins {
-		score, metadata := plugin.Analyze(text)
-		results[i] = newAnalysisResult(score.Score(), score.IsExactMatch(), plugin.Precedence(), plugin.Name(), metadata)
-	}
+	var bestResult analysisResult
+	if e.analyzer == nil {
+		results := make([]analysisResult, len(e.plugins))
+		for i, plugin := range e.plugins {
+			score, metadata := plugin.Analyze(text)
+			results[i] = newAnalysisResult(score.Score(), score.IsExactMatch(), plugin.Precedence(), plugin.Name(), metadata)
+		}
 
-	bestResult := getBestResult(results)
+		bestResult = getBestResult(results)
+	} else {
+		name, metadata := e.analyzer(text)
+		bestResult = analysisResult{
+			name:     name,
+			metadata: metadata,
+		}
+	}
 
 	var chosenPlugin Plugin
 	for _, plugin := range e.plugins {
