@@ -15,21 +15,25 @@ type Engine interface {
 	// SetAnalyzer sets the Analyzer function of the engine.
 	SetAnalyzer(Analyzer)
 
-	// Process takes the text to process and returns the name of the plugin that
+	// Process takes the current request to process and returns the name of the plugin that
 	// processed the text and the data returned by it.
-	Process(string) (string, interface{}, error)
+	Process(*Request) (string, interface{}, error)
 
 	// SchedulePokes schedules all pokes to run indefinitely.
 	SchedulePokes()
+
+	// Memory returns the memory service if any.
+	Memory() MemoryService
 }
 
-// Analyzer is a function that takes a string (the text to process) and returns the name of the plugin that should process it and metadata.
-type Analyzer func(string) (string, interface{})
+// Analyzer is a function that takes the current request to process and returns the name of the plugin that should process it and metadata.
+type Analyzer func(*Request) (string, interface{})
 
 type engine struct {
 	plugins  []Plugin
 	services map[string]Service
 	analyzer Analyzer
+	memory   MemoryService
 }
 
 // NewEngine creates a new Engine instance
@@ -45,6 +49,23 @@ func (e *engine) SetPlugins(plugins []Plugin) {
 func (e *engine) SetServices(services []Service) {
 	for _, service := range services {
 		e.services[service.Name()] = service
+	}
+
+	e.setMemoryService()
+}
+
+func (e *engine) setMemoryService() {
+	if service, ok := e.services["memory"]; ok {
+		if memoryService, isMemoryService := service.(MemoryService); isMemoryService && service.Name() == "memory" {
+			storeName := memoryService.NeededStore()
+			if store, ok := e.services[storeName]; ok || storeName == "" {
+				memoryService.SetStore(store)
+			} else {
+				panic(errors.New("service " + storeName + " not found but is required by memory service"))
+			}
+
+			e.memory = memoryService
+		}
 	}
 }
 
@@ -69,7 +90,7 @@ func (e *engine) injectServices(plugins []Plugin) []Plugin {
 	return plugins
 }
 
-func (e *engine) Process(text string) (string, interface{}, error) {
+func (e *engine) Process(req *Request) (string, interface{}, error) {
 	if len(e.plugins) == 0 {
 		return "", nil, errors.New("no plugins found. can't process anything")
 	}
@@ -78,13 +99,13 @@ func (e *engine) Process(text string) (string, interface{}, error) {
 	if e.analyzer == nil {
 		results := make([]analysisResult, len(e.plugins))
 		for i, plugin := range e.plugins {
-			score, metadata := plugin.Analyze(text)
+			score, metadata := plugin.Analyze(req)
 			results[i] = newAnalysisResult(score.Score(), score.IsExactMatch(), plugin.Precedence(), plugin.Name(), metadata)
 		}
 
 		bestResult = getBestResult(results)
 	} else {
-		name, metadata := e.analyzer(text)
+		name, metadata := e.analyzer(req)
 		bestResult = analysisResult{
 			name:     name,
 			metadata: metadata,
@@ -99,8 +120,12 @@ func (e *engine) Process(text string) (string, interface{}, error) {
 		}
 	}
 
-	data, err := chosenPlugin.Process(text, bestResult.metadata)
+	data, err := chosenPlugin.Process(req, bestResult.metadata)
 	return chosenPlugin.Name(), data, err
+}
+
+func (e *engine) Memory() MemoryService {
+	return e.memory
 }
 
 func (e *engine) SchedulePokes() {

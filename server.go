@@ -59,10 +59,19 @@ func (s *server) Run() {
 		if c.BindJSON(&json) == nil {
 			text, ok := json[inputName]
 			if ok && utf8.RuneCountInString(strings.TrimSpace(text)) > 0 {
-				dataType, data, err := s.engine.Process(strings.TrimSpace(text))
+				req := NewRequest(strings.TrimSpace(text), c.Request)
+				if s.engine.Memory() != nil {
+					req.Token = c.Request.Header.Get(s.engine.Memory().TokenHeader())
+				}
+
+				dataType, data, err := s.engine.Process(req)
 				if err != nil {
 					errorText = err.Error()
 				} else {
+					if s.engine.Memory() != nil {
+						c.Header(s.engine.Memory().TokenHeader(), req.Token)
+					}
+
 					c.JSON(http.StatusOK, gin.H{
 						"error": false,
 						"type":  dataType,

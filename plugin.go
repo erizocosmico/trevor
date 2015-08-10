@@ -4,12 +4,12 @@ import "sort"
 
 // Plugin defines the base functionality that a trevor plugin should have
 type Plugin interface {
-	// Analyze takes a string with the text and after specific analysis returns
+	// Analyze takes the request to process and after specific analysis returns
 	// a Score and metadata that will later be passed to process
-	Analyze(string) (Score, interface{})
+	Analyze(*Request) (Score, interface{})
 
-	// Process takes a string with the text and the metadata returned by Analyze method and processes that text to return data that will be sent to the client
-	Process(string, interface{}) (interface{}, error)
+	// Process takes the request to process and the metadata returned by Analyze method and processes that text to return data that will be sent to the client
+	Process(*Request, interface{}) (interface{}, error)
 
 	// Name returns the name of the plugin
 	Name() string

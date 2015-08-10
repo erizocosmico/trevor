@@ -13,15 +13,15 @@ import (
 
 type salutePlugin struct{}
 
-func (p *salutePlugin) Analyze(text string) (Score, interface{}) {
-	if "how are you?" == strings.ToLower(text) {
+func (p *salutePlugin) Analyze(req *Request) (Score, interface{}) {
+	if "how are you?" == strings.ToLower(req.Text) {
 		return NewScore(9, true), nil
 	} else {
 		return NewScore(0, false), nil
 	}
 }
 
-func (p *salutePlugin) Process(text string, _ interface{}) (interface{}, error) {
+func (p *salutePlugin) Process(req *Request, _ interface{}) (interface{}, error) {
 	return "fine, and you?", nil
 }
 
@@ -37,11 +37,11 @@ type fooPlugin struct {
 	poked int
 }
 
-func (p *fooPlugin) Analyze(text string) (Score, interface{}) {
+func (p *fooPlugin) Analyze(req *Request) (Score, interface{}) {
 	return NewScore(5, false), nil
 }
 
-func (p *fooPlugin) Process(text string, _ interface{}) (interface{}, error) {
+func (p *fooPlugin) Process(req *Request, _ interface{}) (interface{}, error) {
 	return nil, errors.New("i always throw error")
 }
 
@@ -57,11 +57,11 @@ type barPlugin struct {
 	service *barService
 }
 
-func (p *barPlugin) Analyze(text string) (Score, interface{}) {
+func (p *barPlugin) Analyze(req *Request) (Score, interface{}) {
 	return NewScore(0, false), nil
 }
 
-func (p *barPlugin) Process(text string, _ interface{}) (interface{}, error) {
+func (p *barPlugin) Process(req *Request, _ interface{}) (interface{}, error) {
 	return nil, nil
 }
 
@@ -115,7 +115,7 @@ func TestProcess(t *testing.T) {
 	engine := NewEngine()
 	engine.SetPlugins(dummyPlugins())
 
-	dataType, data, err := engine.Process("how are you?")
+	dataType, data, err := engine.Process(NewRequest("how are you?", nil))
 
 	if err != nil {
 		t.Error("unexpected error!")
@@ -134,7 +134,7 @@ func TestProcessNoPlugins(t *testing.T) {
 	engine := NewEngine()
 	engine.SetPlugins(make([]Plugin, 0))
 
-	_, _, err := engine.Process("how are you?")
+	_, _, err := engine.Process(NewRequest("how are you?", nil))
 
 	if err == nil {
 		t.Error("expected error!")
@@ -196,14 +196,26 @@ func TestAnalyzer(t *testing.T) {
 	e := NewEngine().(*engine)
 	e.SetPlugins(dummyPlugins())
 	e.SetServices(dummyServices())
-	e.SetAnalyzer(func(text string) (string, interface{}) {
+	e.SetAnalyzer(func(req *Request) (string, interface{}) {
 		return "foo", nil
 	})
 
-	plugin, data, err := e.Process("how are you?")
+	plugin, data, err := e.Process(NewRequest("how are you?", nil))
 	if err == nil || data != nil || plugin != "foo" {
 		t.Errorf("expected foo plugin to process but %s plugin did", plugin)
 	}
+}
+
+func TestSetMemoryServiceWithoutStore(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("expected a panic!")
+		}
+	}()
+
+	e := NewEngine().(*engine)
+	e.SetPlugins(dummyPlugins())
+	e.SetServices([]Service{&memoryService{}})
 }
 
 //
