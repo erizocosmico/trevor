@@ -11,9 +11,10 @@ import (
 
 func makeRequest(text string) (string, string) {
 	server := NewServer(Config{
-		Plugins:  dummyPlugins(),
-		Port:     8888,
-		Endpoint: "get_data",
+		Plugins:        dummyPlugins(),
+		Port:           8888,
+		Endpoint:       "get_data",
+		InputFieldName: "input",
 	})
 
 	go func() {
@@ -41,7 +42,7 @@ func makeRequest(text string) (string, string) {
 }
 
 func TestRun(t *testing.T) {
-	body, status := makeRequest(`{"text":"how are you?"}`)
+	body, status := makeRequest(`{"input":"how are you?"}`)
 
 	if status != "200 OK" {
 		t.Errorf("expected status 200, got %s", status)
@@ -61,7 +62,7 @@ func TestRunNoText(t *testing.T) {
 }
 
 func TestRunTextEmpty(t *testing.T) {
-	_, status := makeRequest(`{"text":""}`)
+	_, status := makeRequest(`{"input":""}`)
 
 	if status != "400 Bad Request" {
 		t.Errorf("expected status 400, got %s", status)
@@ -69,7 +70,7 @@ func TestRunTextEmpty(t *testing.T) {
 }
 
 func TestRunPluginError(t *testing.T) {
-	_, status := makeRequest(`{"text":"foo"}`)
+	_, status := makeRequest(`{"input":"foo"}`)
 
 	if status != "400 Bad Request" {
 		t.Errorf("expected status 400, got %s", status)

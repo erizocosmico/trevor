@@ -20,6 +20,9 @@ type Config struct {
 	// Endpoint is the endpoint to get the processed data. e.g: http://localhost:8080/get_data
 	Endpoint string
 
+	// InputFieldName is the key of the JSON object passed to the endpoint that contains the input data.
+	InputFieldName string
+
 	// KeyPerm is the key for the SSL
 	KeyPerm string
 

@@ -17,10 +17,6 @@ type Server interface {
 	GetEngine() Engine
 }
 
-type Request struct {
-	Text string `form:"text" json:"text" binding:"required"`
-}
-
 type server struct {
 	engine Engine
 	config Config
@@ -42,19 +38,27 @@ func (s *server) GetEngine() Engine {
 }
 
 func (s *server) Run() {
-	router := gin.Default()
-	var endpoint = "process"
+	var (
+		router    = gin.Default()
+		endpoint  = "process"
+		inputName = "text"
+	)
+
 	if s.config.Endpoint != "" {
 		endpoint = s.config.Endpoint
 	}
 
+	if s.config.InputFieldName != "" {
+		inputName = s.config.InputFieldName
+	}
+
 	router.POST("/"+endpoint, func(c *gin.Context) {
-		var json Request
+		var json map[string]string
 
 		if c.BindJSON(&json) == nil {
-			text := strings.TrimSpace(json.Text)
-			if utf8.RuneCountInString(text) > 0 {
-				dataType, data, err := s.engine.Process(text)
+			text, ok := json[inputName]
+			if ok && utf8.RuneCountInString(strings.TrimSpace(text)) > 0 {
+				dataType, data, err := s.engine.Process(strings.TrimSpace(text))
 				if err != nil {
 					c.JSON(http.StatusBadRequest, gin.H{
 						"error":   true,
