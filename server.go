@@ -42,6 +42,7 @@ func (s *server) Run() {
 		router    = gin.Default()
 		endpoint  = "process"
 		inputName = "text"
+		errorText = inputName + " field is mandatory and can not be empty"
 	)
 
 	if s.config.Endpoint != "" {
@@ -60,25 +61,21 @@ func (s *server) Run() {
 			if ok && utf8.RuneCountInString(strings.TrimSpace(text)) > 0 {
 				dataType, data, err := s.engine.Process(strings.TrimSpace(text))
 				if err != nil {
-					c.JSON(http.StatusBadRequest, gin.H{
-						"error":   true,
-						"message": err.Error(),
+					errorText = err.Error()
+				} else {
+					c.JSON(http.StatusOK, gin.H{
+						"error": false,
+						"type":  dataType,
+						"data":  data,
 					})
 					return
 				}
-
-				c.JSON(http.StatusOK, gin.H{
-					"error": false,
-					"type":  dataType,
-					"data":  data,
-				})
-				return
 			}
 		}
 
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error":   true,
-			"message": "text field is mandatory and can not be empty",
+			"message": errorText,
 		})
 	})
 
