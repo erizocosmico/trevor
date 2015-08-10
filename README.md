@@ -85,7 +85,7 @@ All poking goroutines are spawned when the server `Run` method is called.
 
 ## Custom analyzer
 
-Maybe you want to ditch the default behavior of the trevor engine (iterate over all plugins to get the score returned of analysing the input and choosing the better match) and use your own analyzer function that decides which plugin should be used. You can do that passing an [Analyzer](http://godoc.org/github.com/mvader/trevor#Analyzer) to the server on the configuration.
+Maybe you want to ditch the default behavior of the trevor engine (iterate over all plugins to get the score returned of analysing the input and choosing the better match) and use your own analyzer function that decides which plugin should be used. You can do that by passing an [Analyzer](http://godoc.org/github.com/mvader/trevor#Analyzer) to the server on the configuration.
 
 An `Analyzer` receives the input and returns the name of the plugin that will process that input and metadata just like the plugins `Analyze` method would.
 
@@ -100,7 +100,7 @@ func main() {
     Analyzer: func (text string) (string, interface{} {
       // wow such analysis
       return "plugin name", map[string]interface{}{
-        "some": "values,
+        "some": "values",
       }
     },
   }
