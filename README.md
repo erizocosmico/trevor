@@ -83,6 +83,33 @@ The motivation for the pokables is to have a centralized scheduler that will cal
 
 All poking goroutines are spawned when the server `Run` method is called.
 
+## Custom analyzer
+
+Maybe you want to ditch the default behavior of the trevor engine (iterate over all plugins to get the score returned of analysing the input and choosing the better match) and use your own analyzer function that decides which plugin should be used. You can do that passing an [Analyzer](http://godoc.org/github.com/mvader/trevor#Analyzer) to the server on the configuration.
+
+An `Analyzer` receives the input and returns the name of the plugin that will process that input and metadata just like the plugins `Analyze` method would.
+
+#### Example
+
+```go
+func main() {
+  config := trevor.Config{
+    Plugins:  []trevor.Plugin{MyFancyPlugin(), MyOtherFancyPlugin()},
+    Services: []trevor.Service{MyFancyService()},
+    Port:     8888,
+    Analyzer: func (text string) (string, interface{} {
+      // wow such analysis
+      return "plugin name", map[string]interface{}{
+        "some": "values,
+      }
+    },
+  }
+  
+  server := trevor.NewServer(config)
+  server.Run()
+}
+```
+
 ## Example
 
 Example implementation. We consider a fictional plugin `randomMovie` that lives in `github.com/trevor/movie` (this plugin does not actually exist). We also consider another fictional `cacheService` service that lives in `github.com/trevor/cache`.
