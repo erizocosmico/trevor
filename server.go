@@ -1,8 +1,9 @@
 package trevor
 
 import (
+	"encoding/json"
 	"fmt"
-	"github.com/gin-gonic/gin"
+	"io/ioutil"
 	"net/http"
 	"strings"
 	"unicode/utf8"
@@ -11,7 +12,7 @@ import (
 // Server is a Trevor server ready to run
 type Server interface {
 	// Run starts the server.
-	Run()
+	Run() error
 
 	// GetEngine returns the current Engine being used on the server.
 	GetEngine() Engine
@@ -37,12 +38,10 @@ func (s *server) GetEngine() Engine {
 	return s.engine
 }
 
-func (s *server) Run() {
+func (s *server) Run() error {
 	var (
-		router    = gin.Default()
 		endpoint  = "process"
 		inputName = "text"
-		errorText = inputName + " field is mandatory and can not be empty"
 	)
 
 	if s.config.Endpoint != "" {
@@ -53,47 +52,74 @@ func (s *server) Run() {
 		inputName = s.config.InputFieldName
 	}
 
-	router.POST("/"+endpoint, func(c *gin.Context) {
-		var json map[string]string
-
-		if c.BindJSON(&json) == nil {
-			text, ok := json[inputName]
-			if ok && utf8.RuneCountInString(strings.TrimSpace(text)) > 0 {
-				req := NewRequest(strings.TrimSpace(text), c.Request)
-				if s.engine.Memory() != nil {
-					req.Token = c.Request.Header.Get(s.engine.Memory().TokenHeader())
-				}
-
-				dataType, data, err := s.engine.Process(req)
-				if err != nil {
-					errorText = err.Error()
-				} else {
-					if s.engine.Memory() != nil {
-						c.Header(s.engine.Memory().TokenHeader(), req.Token)
-					}
-
-					c.JSON(http.StatusOK, gin.H{
-						"error": false,
-						"type":  dataType,
-						"data":  data,
-					})
-					return
-				}
-			}
-		}
-
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error":   true,
-			"message": errorText,
-		})
-	})
+	router := http.NewServeMux()
+	router.HandleFunc("/"+endpoint, processHandler(inputName, endpoint, s))
 
 	s.engine.SchedulePokes()
 
+	var err error
 	addr := fmt.Sprintf("%s:%d", s.config.Host, s.config.Port)
 	if !s.config.Secure {
-		router.Run(addr)
+		err = http.ListenAndServe(addr, router)
 	} else {
-		router.RunTLS(addr, s.config.CertPerm, s.config.KeyPerm)
+		err = http.ListenAndServeTLS(addr, s.config.CertPerm, s.config.KeyPerm, router)
+	}
+
+	return err
+}
+
+func processHandler(inputName, endpoint string, s *server) func(http.ResponseWriter, *http.Request) {
+	var errorText = inputName + " field is mandatory and can not be empty"
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "POST" {
+			var (
+				jsonInput map[string]string
+				response  map[string]interface{}
+				status    int
+			)
+
+			content, err := ioutil.ReadAll(r.Body)
+			if err = json.Unmarshal(content, &jsonInput); err == nil {
+				text, ok := jsonInput[inputName]
+				if ok && utf8.RuneCountInString(strings.TrimSpace(text)) > 0 {
+					req := NewRequest(strings.TrimSpace(text), r)
+					if s.engine.Memory() != nil {
+						req.Token = r.Header.Get(s.engine.Memory().TokenHeader())
+					}
+
+					dataType, data, err := s.engine.Process(req)
+					if err != nil {
+						errorText = err.Error()
+					} else {
+						if s.engine.Memory() != nil {
+							w.Header().Set(s.engine.Memory().TokenHeader(), req.Token)
+						}
+
+						response = map[string]interface{}{
+							"error": false,
+							"type":  dataType,
+							"data":  data,
+						}
+						status = http.StatusOK
+					}
+				}
+			}
+
+			if status == 0 {
+				response = map[string]interface{}{
+					"error":   true,
+					"message": errorText,
+				}
+				status = http.StatusBadRequest
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(status)
+			resp, _ := json.Marshal(response)
+			w.Write(resp)
+		} else {
+			http.NotFound(w, r)
+		}
 	}
 }

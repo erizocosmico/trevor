@@ -10,11 +10,11 @@ import (
 	"time"
 )
 
-func makeRequestWithHeader(header string) (string, string) {
+func startServer() {
 	server := NewServer(Config{
 		Plugins:        []Plugin{&rememberPlugin{}},
 		Services:       []Service{&memoryService{}, &storeService{map[string]int{}}},
-		Port:           8887,
+		Port:           8884,
 		Endpoint:       "get_data",
 		InputFieldName: "input",
 	})
@@ -24,9 +24,11 @@ func makeRequestWithHeader(header string) (string, string) {
 	}()
 
 	time.Sleep(5 * time.Millisecond)
+}
 
+func makeRequestWithHeader(header string) (string, string) {
 	jsonStr := []byte(`{"input":"how are you?"}`)
-	req, err := http.NewRequest("POST", "http://0.0.0.0:8887/get_data", bytes.NewBuffer(jsonStr))
+	req, err := http.NewRequest("POST", "http://0.0.0.0:8884/get_data", bytes.NewBuffer(jsonStr))
 	if err != nil {
 		panic(err)
 	}
@@ -149,6 +151,7 @@ func (s *memoryService) SetStore(store Service) error {
 //
 
 func TestMemoryService(t *testing.T) {
+	startServer()
 	assertRememberRequest("", "hello new visitor", "token_1", t)
 	assertRememberRequest("token_1", "visit number 1", "token_1", t)
 	assertRememberRequest("token_1", "visit number 2", "token_1", t)

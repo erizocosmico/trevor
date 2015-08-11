@@ -6,7 +6,7 @@ import (
 )
 
 func (p *fooPlugin) PokeEvery() time.Duration {
-	return 1 * time.Second
+	return 50 * time.Millisecond
 }
 
 func (p *fooPlugin) Poke() bool {
@@ -16,7 +16,7 @@ func (p *fooPlugin) Poke() bool {
 }
 
 func (s *fooService) PokeEvery() time.Duration {
-	return 1 * time.Second
+	return 50 * time.Millisecond
 }
 
 func (s *fooService) Poke() bool {

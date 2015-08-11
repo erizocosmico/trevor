@@ -181,7 +181,7 @@ func TestSchedulePokes(t *testing.T) {
 
 	e.SchedulePokes()
 
-	time.Sleep(5 * time.Second)
+	time.Sleep(250 * time.Millisecond)
 
 	if e.plugins[0].(*fooPlugin).poked < 4 {
 		t.Errorf("plugin should have been poked at least 4 times")

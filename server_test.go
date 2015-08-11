@@ -2,6 +2,7 @@ package trevor
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -9,10 +10,14 @@ import (
 	"time"
 )
 
-func makeRequest(text string) (string, string) {
+func makeRequest(text string, port int) (string, string) {
+	return makeRequestWithMethod(text, port, "POST")
+}
+
+func makeRequestWithMethod(text string, port int, method string) (string, string) {
 	server := NewServer(Config{
 		Plugins:        dummyPlugins(),
-		Port:           8888,
+		Port:           port,
 		Endpoint:       "get_data",
 		InputFieldName: "input",
 	})
@@ -24,7 +29,7 @@ func makeRequest(text string) (string, string) {
 	time.Sleep(5 * time.Millisecond)
 
 	jsonStr := []byte(text)
-	req, err := http.NewRequest("POST", "http://0.0.0.0:8888/get_data", bytes.NewBuffer(jsonStr))
+	req, err := http.NewRequest(method, fmt.Sprintf("http://0.0.0.0:%d/get_data", port), bytes.NewBuffer(jsonStr))
 	if err != nil {
 		panic(err)
 	}
@@ -42,7 +47,7 @@ func makeRequest(text string) (string, string) {
 }
 
 func TestRun(t *testing.T) {
-	body, status := makeRequest(`{"input":"how are you?"}`)
+	body, status := makeRequest(`{"input":"how are you?"}`, 9091)
 
 	if status != "200 OK" {
 		t.Errorf("expected status 200, got %s", status)
@@ -54,7 +59,7 @@ func TestRun(t *testing.T) {
 }
 
 func TestRunNoText(t *testing.T) {
-	_, status := makeRequest(`{"foo":"bar"}`)
+	_, status := makeRequest(`{"foo":"bar"}`, 9092)
 
 	if status != "400 Bad Request" {
 		t.Errorf("expected status 400, got %s", status)
@@ -62,7 +67,7 @@ func TestRunNoText(t *testing.T) {
 }
 
 func TestRunTextEmpty(t *testing.T) {
-	_, status := makeRequest(`{"input":""}`)
+	_, status := makeRequest(`{"input":""}`, 9093)
 
 	if status != "400 Bad Request" {
 		t.Errorf("expected status 400, got %s", status)
@@ -70,7 +75,7 @@ func TestRunTextEmpty(t *testing.T) {
 }
 
 func TestRunPluginError(t *testing.T) {
-	_, status := makeRequest(`{"input":"foo"}`)
+	_, status := makeRequest(`{"input":"foo"}`, 9094)
 
 	if status != "400 Bad Request" {
 		t.Errorf("expected status 400, got %s", status)
@@ -81,17 +86,25 @@ func TestRunPluginError(t *testing.T) {
 func TestGetEngine(t *testing.T) {
 	server := NewServer(Config{
 		Plugins:  dummyPlugins(),
-		Port:     8888,
+		Port:     9095,
 		Endpoint: "get_data",
 	})
 	server.GetEngine()
 }
 
 // Just for code coverage too
+func TestNotFound(t *testing.T) {
+	_, status := makeRequestWithMethod(`whatever`, 9097, "GET")
+	if status != "404 Not Found" {
+		t.Errorf("expected error 404, %s received", status)
+	}
+}
+
+// Just for code coverage too
 func TestRunSecure(t *testing.T) {
 	server := NewServer(Config{
 		Plugins:  dummyPlugins(),
-		Port:     8888,
+		Port:     9096,
 		Endpoint: "get_data",
 		Secure:   true,
 	})
