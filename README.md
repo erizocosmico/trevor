@@ -1,6 +1,6 @@
-![trevor](https://raw.githubusercontent.com/go-trevor/trevor/master/trevor.png)
+![trevor](https://raw.githubusercontent.com/mvader/trevor/master/trevor.png)
 
-[![Build Status](https://travis-ci.org/go-trevor/trevor.svg)](https://travis-ci.org/go-trevor/trevor) [![Coverage Status](https://coveralls.io/repos/go-trevor/trevor/badge.svg?branch=master&service=github)](https://coveralls.io/github/go-trevor/trevor?branch=master) [![GoDoc](https://godoc.org/github.com/go-trevor/trevor?status.svg)](http://godoc.org/github.com/go-trevor/trevor)
+[![Build Status](https://travis-ci.org/mvader/trevor.svg)](https://travis-ci.org/mvader/trevor) [![Coverage Status](https://coveralls.io/repos/mvader/trevor/badge.svg?branch=master&service=github)](https://coveralls.io/github/mvader/trevor?branch=master) [![GoDoc](https://godoc.org/github.com/mvader/trevor?status.svg)](http://godoc.org/github.com/mvader/trevor)
 
 Trevor is an extensible framework to build [knowledge navigators](https://en.wikipedia.org/wiki/Knowledge_navigator) through custom plugins.
 
@@ -8,7 +8,7 @@ In brief, you could build a Siri-like or Google Now-like API (without the voice 
 
 ## How does it work
 
-* A request is made to an endpoint (configurable via [Config](http://godoc.org/github.com/go-trevor/trevor#Config)) with a JSON like:
+* A request is made to an endpoint (configurable via [Config](http://godoc.org/github.com/mvader/trevor#Config)) with a JSON like:
 ```json
 {
   "text": "recommend me a movie"
@@ -28,7 +28,7 @@ In brief, you could build a Siri-like or Google Now-like API (without the voice 
 
 ## Create plugins
 
-To create a plugin you just have to implement the [Plugin](http://godoc.org/github.com/go-trevor/trevor#Plugin) interface.
+To create a plugin you just have to implement the [Plugin](http://godoc.org/github.com/mvader/trevor#Plugin) interface.
 
 **Considerations:**
 * Even though there are no limits for the score (only that it has to be a float64) it is recommended to use a range of numbers consistent across all plugins. **The recommended range is [0, 10]**.
@@ -36,12 +36,12 @@ To create a plugin you just have to implement the [Plugin](http://godoc.org/gith
 But thing that there is also a search plugin. Neither of the aforementioned plugins could return an exact match for the text "lost" because maybe the user is not looking for shows.
 **TL;DR:** think your plugins very well to work nice with other plugins.
 
-Check out [trevor-plugins](https://github.com/go-trevor/trevor-plugins) for reference plugins.
+Check out [trevor-plugins](https://github.com/mvader/trevor-plugins) for reference plugins.
 
 ### Injectable pugins
 
 A plugin may need some services to run. Maybe even two plugins need the same service. Instead of implementing each service in your own plugin trevor provides a mechanism to register services on the engine.
-Using injectable plugins a plugin receives on startup time all the services it needs to work. To convert a plugin to an injectable plugin you just need to implement the [InjectablePlugin](http://godoc.org/github.com/go-trevor/trevor#InjectablePlugin) interface.
+Using injectable plugins a plugin receives on startup time all the services it needs to work. To convert a plugin to an injectable plugin you just need to implement the [InjectablePlugin](http://godoc.org/github.com/mvader/trevor#InjectablePlugin) interface.
 
 Basically, you implement the `NeededServices` method that returns a list with the names of all services needed by the plugin.
 When the engine is started it will try to find those services and inject them to the plugin using the `SetPlugin` method of the plugin.
@@ -67,7 +67,7 @@ func (p *myPlugin) SetService(name string, service trevor.Service) {
 
 ## Create services
 
-To create a service you just have to implement the [Service](http://godoc.org/github.com/go-trevor/trevor#Service) interface.
+To create a service you just have to implement the [Service](http://godoc.org/github.com/mvader/trevor#Service) interface.
 
 All it is asked for a service to implement is `Name` and `SetName` methods. The rest is up to the developer of the service.
 
@@ -77,7 +77,7 @@ Use an unique name for the service. If you use the name "cache" it will sure cla
 ## Pokables
 
 A `Pokable` in trevor is a component (a plugin or a service) that will be [poked](http://www.wanapesa.com/poke/img/94888877_o.png) in intervals defined by the same pokable.
-To make a `Plugin` or a `Service` pokable the only thing you need to do is implement the [Pokable](http://godoc.org/github.com/go-trevor/trevor#Pokable) interface.
+To make a `Plugin` or a `Service` pokable the only thing you need to do is implement the [Pokable](http://godoc.org/github.com/mvader/trevor#Pokable) interface.
 
 The motivation for the pokables is to have a centralized scheduler that will call the component every X time. That eliminates the need to have workers in most cases. For example, imagine you have a service that needs a configuration from a server but that configuration changes every 24 hours. You could implement a goroutine that fetches that configuration every 24 hours but that should not be a responsability of the service. Instead, you could make the service pokable and every 24 hours (if you define that interval in your implementation) the `Poke` method will be called. That way, your service does no longer have the responsability of spawning a goroutine to fetch periodically the configuration.
 
@@ -85,7 +85,7 @@ All poking goroutines are spawned when the server `Run` method is called.
 
 ## Custom analyzer
 
-Maybe you want to ditch the default behavior of the trevor engine (iterate over all plugins to get the score returned of analysing the input and choosing the better match) and use your own analyzer function that decides which plugin should be used. You can do that by passing an [Analyzer](http://godoc.org/github.com/go-trevor/trevor#Analyzer) to the server on the configuration.
+Maybe you want to ditch the default behavior of the trevor engine (iterate over all plugins to get the score returned of analysing the input and choosing the better match) and use your own analyzer function that decides which plugin should be used. You can do that by passing an [Analyzer](http://godoc.org/github.com/mvader/trevor#Analyzer) to the server on the configuration.
 
 An `Analyzer` receives the input and returns the name of the plugin that will process that input and metadata just like the plugins `Analyze` method would.
 
@@ -120,7 +120,7 @@ Example implementation. We consider a fictional plugin `randomMovie` that lives 
 package main
 
 import (
-  "github.com/go-trevor/trevor"
+  "github.com/mvader/trevor"
   "github.com/trevor/movie"
   "github.com/trevor/cache"
 )
