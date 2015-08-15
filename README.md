@@ -74,6 +74,21 @@ All it is asked for a service to implement is `Name` and `SetName` methods. The 
 **Considerations:**
 Use an unique name for the service. If you use the name "cache" it will sure clash with another service. Imagine a `RedisCacheService` and a `MemcachedCacheService`. If both are named `cache` only the last one added will be available in the engine. In that case, they should be named `redis_cache` and `memcached_cache`. Then, if the user wants to use them as `cache` they can be renamed with the `SetName` method.
 
+## Memory service
+
+The memory service is a special type of service, a service that also implements the [MemoryService](http://godoc.org/github.com/mvader/trevor#MemoryService) interface. The purpose of this kind of service is to give memory to the trevor engine. Not actual memory but the ability to "remember" an user. It works like regular authentication, given an HTTP request the service has a method to return a token based on that request. If that token is passed along in subsequent requests, trevor will be able to identify the user that is requesting information and then the trevor engine can give a more personalized response. For example, you could use that service to give better results based on what the user has previously requested.
+
+How all of this is implemented is up to you, `MemoryService` is only defined as an interface in the core because it needs integration in the core and thus it needs a common interface.
+
+If you need guidance on how to implement a memory service you can take a look at the [memory_service_test.go](https://github.com/mvader/trevor/blob/master/memory_service_test.go) file to see how the service is implemented for the tests.
+
+### How it works
+* The first time an user requests information no token is passed with the request.
+* All the plugins receive the request.
+* The plugin in charge of processing the request should assign a token to the [Request](http://godoc.org/github.com/mvader/trevor#Request) it received.
+* The server will send the token previously assigned to the request with the response.
+* In subsequent requests the user will pass the token with the request.
+
 ## Pokables
 
 A `Pokable` in trevor is a component (a plugin or a service) that will be [poked](http://www.wanapesa.com/poke/img/94888877_o.png) in intervals defined by the same pokable.
