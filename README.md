@@ -15,7 +15,7 @@ gopkg.in/mvader/trevor.v1
 
 ## How does it work
 
-* A request is made to an endpoint (configurable via [Config](http://godoc.org/github.com/mvader/trevor#Config)) with a JSON like:
+* A request is made to an endpoint (configurable via [Config](http://godoc.org/gopkg.in/mvader/trevor.v1#Config)) with a JSON like:
 ```json
 {
   "text": "recommend me a movie"
@@ -35,7 +35,7 @@ gopkg.in/mvader/trevor.v1
 
 ## Create plugins
 
-To create a plugin you just have to implement the [Plugin](http://godoc.org/github.com/mvader/trevor#Plugin) interface.
+To create a plugin you just have to implement the [Plugin](http://godoc.org/gopkg.in/mvader/trevor.v1#Plugin) interface.
 
 **Considerations:**
 * Even though there are no limits for the score (only that it has to be a float64) it is recommended to use a range of numbers consistent across all plugins. **The recommended range is [0, 10]**.
@@ -48,7 +48,7 @@ Check out [trevor-plugins](https://github.com/mvader/trevor-plugins) for referen
 ### Injectable pugins
 
 A plugin may need some services to run. Maybe even two plugins need the same service. Instead of implementing each service in your own plugin trevor provides a mechanism to register services on the engine.
-Using injectable plugins a plugin receives on startup time all the services it needs to work. To convert a plugin to an injectable plugin you just need to implement the [InjectablePlugin](http://godoc.org/github.com/mvader/trevor#InjectablePlugin) interface.
+Using injectable plugins a plugin receives on startup time all the services it needs to work. To convert a plugin to an injectable plugin you just need to implement the [InjectablePlugin](http://godoc.org/gopkg.in/mvader/trevor.v1#InjectablePlugin) interface.
 
 Basically, you implement the `NeededServices` method that returns a list with the names of all services needed by the plugin.
 When the engine is started it will try to find those services and inject them to the plugin using the `SetPlugin` method of the plugin.
@@ -74,7 +74,7 @@ func (p *myPlugin) SetService(name string, service trevor.Service) {
 
 ## Create services
 
-To create a service you just have to implement the [Service](http://godoc.org/github.com/mvader/trevor#Service) interface.
+To create a service you just have to implement the [Service](http://godoc.org/gopkg.in/mvader/trevor.v1#Service) interface.
 
 All it is asked for a service to implement is `Name` and `SetName` methods. The rest is up to the developer of the service.
 
@@ -83,7 +83,7 @@ Use an unique name for the service. If you use the name "cache" it will sure cla
 
 ## Memory service
 
-The memory service is a special type of service, a service that also implements the [MemoryService](http://godoc.org/github.com/mvader/trevor#MemoryService) interface. The purpose of this kind of service is to give memory to the trevor engine. Not actual memory but the ability to "remember" an user. It works like regular authentication, given an HTTP request the service has a method to return a token based on that request. If that token is passed along in subsequent requests, trevor will be able to identify the user that is requesting information and then the trevor engine can give a more personalized response. For example, you could use that service to give better results based on what the user has previously requested.
+The memory service is a special type of service, a service that also implements the [MemoryService](http://godoc.org/gopkg.in/mvader/trevor.v1#MemoryService) interface. The purpose of this kind of service is to give memory to the trevor engine. Not actual memory but the ability to "remember" an user. It works like regular authentication, given an HTTP request the service has a method to return a token based on that request. If that token is passed along in subsequent requests, trevor will be able to identify the user that is requesting information and then the trevor engine can give a more personalized response. For example, you could use that service to give better results based on what the user has previously requested.
 
 How all of this is implemented is up to you, `MemoryService` is only defined as an interface in the core because it needs integration in the core and thus it needs a common interface.
 
@@ -92,7 +92,7 @@ If you need guidance on how to implement a memory service you can take a look at
 ### How it works
 * The first time an user requests information no token is passed with the request.
 * All the plugins receive the request.
-* The plugin in charge of processing the request should assign a token to the [Request](http://godoc.org/github.com/mvader/trevor#Request) it received.
+* The plugin in charge of processing the request should assign a token to the [Request](http://godoc.org/gopkg.in/mvader/trevor.v1#Request) it received.
 * The server will send the token previously assigned to the request with the response.
 * In subsequent requests the user will pass the token with the request.
 
@@ -134,7 +134,7 @@ The middlewares are executed in the same order of addition. First middleware 1, 
 ## Pokables
 
 A `Pokable` in trevor is a component (a plugin or a service) that will be [poked](http://www.wanapesa.com/poke/img/94888877_o.png) in intervals defined by the same pokable.
-To make a `Plugin` or a `Service` pokable the only thing you need to do is implement the [Pokable](http://godoc.org/github.com/mvader/trevor#Pokable) interface.
+To make a `Plugin` or a `Service` pokable the only thing you need to do is implement the [Pokable](http://godoc.org/gopkg.in/mvader/trevor.v1#Pokable) interface.
 
 The motivation for the pokables is to have a centralized scheduler that will call the component every X time. That eliminates the need to have workers in most cases. For example, imagine you have a service that needs a configuration from a server but that configuration changes every 24 hours. You could implement a goroutine that fetches that configuration every 24 hours but that should not be a responsability of the service. Instead, you could make the service pokable and every 24 hours (if you define that interval in your implementation) the `Poke` method will be called. That way, your service does no longer have the responsability of spawning a goroutine to fetch periodically the configuration.
 
@@ -142,7 +142,7 @@ All poking goroutines are spawned when the server `Run` method is called.
 
 ## Custom analyzer
 
-Maybe you want to ditch the default behavior of the trevor engine (iterate over all plugins to get the score returned of analysing the input and choosing the better match) and use your own analyzer function that decides which plugin should be used. You can do that by passing an [Analyzer](http://godoc.org/github.com/mvader/trevor#Analyzer) to the server on the configuration.
+Maybe you want to ditch the default behavior of the trevor engine (iterate over all plugins to get the score returned of analysing the input and choosing the better match) and use your own analyzer function that decides which plugin should be used. You can do that by passing an [Analyzer](http://godoc.org/gopkg.in/mvader/trevor.v1#Analyzer) to the server on the configuration.
 
 An `Analyzer` receives the input and returns the name of the plugin that will process that input and metadata just like the plugins `Analyze` method would.
 
@@ -177,7 +177,7 @@ Example implementation. We consider a fictional plugin `randomMovie` that lives 
 package main
 
 import (
-  "github.com/mvader/trevor"
+  "gopkg.in/mvader/trevor.v1"
   "github.com/trevor/movie"
   "github.com/trevor/cache"
 )
