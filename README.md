@@ -1,4 +1,4 @@
-![trevor](https://raw.githubusercontent.com/mvader/trevor/master/trevor.png)
+![trevor](https://raw.githubusercontent.com/mvader/trevor/master/trevor.svg)
 
 [![Build Status](https://travis-ci.org/mvader/trevor.svg)](https://travis-ci.org/mvader/trevor) [![Coverage Status](https://coveralls.io/repos/mvader/trevor/badge.svg?branch=master&service=github)](https://coveralls.io/github/mvader/trevor?branch=master) [![GoDoc](https://godoc.org/github.com/mvader/trevor?status.svg)](http://godoc.org/github.com/mvader/trevor)
 
