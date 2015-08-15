@@ -218,6 +218,53 @@ func TestSetMemoryServiceWithoutStore(t *testing.T) {
 	e.SetServices([]Service{&memoryService{}})
 }
 
+func TestMiddleware(t *testing.T) {
+	afterCalled := 0
+	beforeCalled := 0
+
+	mw := func(req *Request, getService func(string) Service, next func() (string, interface{}, error)) (string, interface{}, error) {
+		defer func() {
+			afterCalled++
+		}()
+
+		getService("foo").(*fooService).poked++
+
+		beforeCalled++
+		return next()
+	}
+
+	e := NewEngine().(*engine)
+	e.SetServices([]Service{&fooService{}})
+	e.SetPlugins(dummyPlugins())
+	e.SetMiddleware([]Middleware{mw, mw, mw})
+
+	dataType, data, err := e.Process(NewRequest("how are you?", nil))
+
+	if err != nil {
+		t.Error("unexpected error!")
+	}
+
+	if dataType != "salute" {
+		t.Errorf("expected data type to be 'salute', '%s' found", dataType)
+	}
+
+	if data.(string) != "fine, and you?" {
+		t.Errorf("expected data to be 'find, and you?' but was '%s'", data.(string))
+	}
+
+	if afterCalled != 3 {
+		t.Errorf("expected middleware to have been called 3 times, called %d instead", afterCalled)
+	}
+
+	if beforeCalled != 3 {
+		t.Errorf("expected middleware to have been called 3 times, called %d instead", beforeCalled)
+	}
+
+	if e.services["foo"].(*fooService).poked != 3 {
+		t.Errorf("expected foo service to have been poked 3 times by the middleware, poked %d instead", e.services["foo"].(*fooService).poked)
+	}
+}
+
 //
 // Helper functions
 //

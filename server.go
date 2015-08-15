@@ -27,6 +27,7 @@ func NewServer(config Config) Server {
 	engine := NewEngine()
 	engine.SetServices(config.Services)
 	engine.SetPlugins(config.Plugins)
+	engine.SetMiddleware(config.Middleware)
 
 	return &server{
 		engine: engine,

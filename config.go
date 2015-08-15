@@ -8,6 +8,9 @@ type Config struct {
 	// Services is a list of services for the trevor engine
 	Services []Service
 
+	// Middleware is a list of middlewares for the trevor engine
+	Middleware []Middleware
+
 	// Port is the port in which the server will be run
 	Port int
 

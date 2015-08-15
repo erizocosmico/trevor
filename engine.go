@@ -15,6 +15,9 @@ type Engine interface {
 	// SetAnalyzer sets the Analyzer function of the engine.
 	SetAnalyzer(Analyzer)
 
+	// SetMiddleware sets the list of middleware of the engine.
+	SetMiddleware([]Middleware)
+
 	// Process takes the current request to process and returns the name of the plugin that
 	// processed the text and the data returned by it.
 	Process(*Request) (string, interface{}, error)
@@ -30,11 +33,12 @@ type Engine interface {
 type Analyzer func(*Request) (string, interface{})
 
 type engine struct {
-	plugins   []Plugin
-	pluginMap map[string]int
-	services  map[string]Service
-	analyzer  Analyzer
-	memory    MemoryService
+	plugins    []Plugin
+	pluginMap  map[string]int
+	services   map[string]Service
+	middleware []Middleware
+	analyzer   Analyzer
+	memory     MemoryService
 }
 
 // NewEngine creates a new Engine instance
@@ -81,6 +85,10 @@ func (e *engine) setMemoryService() {
 	}
 }
 
+func (e *engine) SetMiddleware(mw []Middleware) {
+	e.middleware = mw
+}
+
 func (e *engine) SetAnalyzer(analyzer Analyzer) {
 	e.analyzer = analyzer
 }
@@ -102,11 +110,11 @@ func (e *engine) injectServices(plugins []Plugin) []Plugin {
 	return plugins
 }
 
-func (e *engine) Process(req *Request) (string, interface{}, error) {
-	if len(e.plugins) == 0 {
-		return "", nil, errors.New("no plugins found. can't process anything")
-	}
+func (e *engine) getService(name string) Service {
+	return e.services[name]
+}
 
+func (e *engine) process(req *Request) (string, interface{}, error) {
 	var bestResult analysisResult
 	if e.analyzer == nil {
 		bestResult = getBestResult(getResults(e.plugins, req))
@@ -118,6 +126,34 @@ func (e *engine) Process(req *Request) (string, interface{}, error) {
 	var chosenPlugin = e.getPlugin(bestResult.name)
 	data, err := chosenPlugin.Process(req, bestResult.metadata)
 	return chosenPlugin.Name(), data, err
+}
+
+func (e *engine) Process(req *Request) (string, interface{}, error) {
+	if len(e.plugins) == 0 {
+		return "", nil, errors.New("no plugins found. can't process anything")
+	}
+
+	if e.middleware == nil {
+		e.middleware = []Middleware{}
+	}
+
+	var (
+		index  = 0
+		length = len(e.middleware)
+		next   func() (string, interface{}, error)
+	)
+
+	next = func() (string, interface{}, error) {
+		if index >= length {
+			return e.process(req)
+		}
+
+		i := index
+		index++
+		return e.middleware[i](req, e.getService, next)
+	}
+
+	return next()
 }
 
 func (e *engine) Memory() MemoryService {
