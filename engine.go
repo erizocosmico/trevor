@@ -30,20 +30,32 @@ type Engine interface {
 type Analyzer func(*Request) (string, interface{})
 
 type engine struct {
-	plugins  []Plugin
-	services map[string]Service
-	analyzer Analyzer
-	memory   MemoryService
+	plugins   []Plugin
+	pluginMap map[string]int
+	services  map[string]Service
+	analyzer  Analyzer
+	memory    MemoryService
 }
 
 // NewEngine creates a new Engine instance
 func NewEngine() Engine {
-	return &engine{services: map[string]Service{}}
+	return &engine{
+		services:  map[string]Service{},
+		pluginMap: map[string]int{},
+	}
 }
 
 func (e *engine) SetPlugins(plugins []Plugin) {
 	SortPlugins(plugins)
 	e.plugins = e.injectServices(plugins)
+
+	for i, p := range e.plugins {
+		e.pluginMap[p.Name()] = i
+	}
+}
+
+func (e *engine) getPlugin(name string) Plugin {
+	return e.plugins[e.pluginMap[name]]
 }
 
 func (e *engine) SetServices(services []Service) {
@@ -97,29 +109,13 @@ func (e *engine) Process(req *Request) (string, interface{}, error) {
 
 	var bestResult analysisResult
 	if e.analyzer == nil {
-		results := make([]analysisResult, len(e.plugins))
-		for i, plugin := range e.plugins {
-			score, metadata := plugin.Analyze(req)
-			results[i] = newAnalysisResult(score.Score(), score.IsExactMatch(), plugin.Precedence(), plugin.Name(), metadata)
-		}
-
-		bestResult = getBestResult(results)
+		bestResult = getBestResult(getResults(e.plugins, req))
 	} else {
 		name, metadata := e.analyzer(req)
-		bestResult = analysisResult{
-			name:     name,
-			metadata: metadata,
-		}
+		bestResult = analysisResult{name: name, metadata: metadata}
 	}
 
-	var chosenPlugin Plugin
-	for _, plugin := range e.plugins {
-		if plugin.Name() == bestResult.name {
-			chosenPlugin = plugin
-			break
-		}
-	}
-
+	var chosenPlugin = e.getPlugin(bestResult.name)
 	data, err := chosenPlugin.Process(req, bestResult.metadata)
 	return chosenPlugin.Name(), data, err
 }

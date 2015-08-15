@@ -62,6 +62,16 @@ func sortAnalysisResults(results []analysisResult) {
 	sort.Sort(byMatch(results))
 }
 
+func getResults(plugins []Plugin, req *Request) []analysisResult {
+	results := make([]analysisResult, len(plugins))
+	for i, plugin := range plugins {
+		score, metadata := plugin.Analyze(req)
+		results[i] = newAnalysisResult(score.Score(), score.IsExactMatch(), plugin.Precedence(), plugin.Name(), metadata)
+	}
+
+	return results
+}
+
 func getBestResult(results []analysisResult) analysisResult {
 	sortAnalysisResults(results)
 	return results[0]
