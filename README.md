@@ -89,6 +89,41 @@ If you need guidance on how to implement a memory service you can take a look at
 * The server will send the token previously assigned to the request with the response.
 * In subsequent requests the user will pass the token with the request.
 
+## Middleware
+
+**Note**: when *process* is mentioned in this section it means the step of analysing the input received with the request, choosing the best plugin to handle that input and return the response of the `Process` method of that plugin.
+
+A middleware is a function that wraps around the next layer of execution in the trevor engine. For example, if you have just one middleware, it will wrap around the process of the input because there are no more layers. If you have two middlewares the first middleware will wrap around the second one that will wrap arround the process and so on.
+
+Their purpose is to give the programmer the ability to do things before and after the execution of the process. Imagine the following scenario: you want to log all the incoming requests and all the responses. Your middleware would be something like:
+```go
+loggingMiddleware := func (req *trevor.Request, getService func(string) trevor.Service, next func () (string, interface{}, error)) (string, interface{}, error) {
+    log.Println(*req)
+    
+    pluginName, data, err := next()
+    
+    log.Println(data)
+    
+    return pluginName, data, err
+}
+```
+
+When you add a middleware, return the result of the process is the responsibility of that middleware.
+
+The middlewares receive three parameters:
+* request: the `*trevor.Request` containing the HTTP request and the token.
+* getService: a function to retrieve a service by name.
+* next: a function that will invoke the next layer, that is, the next middleware or the process.
+
+The middlewares are executed in the same order of addition. First middleware 1, that will invoke middleware 2, that will invoke middleware n, that will invoke process.
+
+#### Use cases for middlewares
+* Logging.
+* Manage authentication combined with Memory Service (the middleware sets the token if none. Without middlewares, every plugin has to add the token to the request because you don't know which plugin is going to answer the input).
+* Configure services for something (remember that middlewares have access to the services). **Note**: if you configure some service in a middleware remember that the change will apply for everyone. In order to make the services thread safe you should not do this.
+* Spawn goroutines to do things depending on the result returned by the process.
+* Etc.
+
 ## Pokables
 
 A `Pokable` in trevor is a component (a plugin or a service) that will be [poked](http://www.wanapesa.com/poke/img/94888877_o.png) in intervals defined by the same pokable.
