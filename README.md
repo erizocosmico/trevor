@@ -6,6 +6,13 @@ Trevor is an extensible framework to build [knowledge navigators](https://en.wik
 
 In brief, you could build a Siri-like or Google Now-like API (without the voice recognition layer) for you app. Trevor only provides the framework to build it.
 
+## Stable version 1.0.0
+
+The stable version 1.0.0 is available at gopkg.in.
+```
+gopkg.in/mvader/trevor.v1
+```
+
 ## How does it work
 
 * A request is made to an endpoint (configurable via [Config](http://godoc.org/github.com/mvader/trevor#Config)) with a JSON like:
