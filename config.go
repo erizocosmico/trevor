@@ -26,6 +26,9 @@ type Config struct {
 	// InputFieldName is the key of the JSON object passed to the endpoint that contains the input data.
 	InputFieldName string
 
+	// CORSOrigin is a comma separated list of origins allowed for CORS.
+	CORSOrigin string
+
 	// KeyPerm is the key for the SSL
 	KeyPerm string
 

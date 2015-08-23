@@ -41,8 +41,9 @@ func (s *server) GetEngine() Engine {
 
 func (s *server) Run() error {
 	var (
-		endpoint  = "process"
-		inputName = "text"
+		endpoint   = "process"
+		inputName  = "text"
+		CORSOrigin = "*"
 	)
 
 	if s.config.Endpoint != "" {
@@ -53,8 +54,12 @@ func (s *server) Run() error {
 		inputName = s.config.InputFieldName
 	}
 
+	if s.config.CORSOrigin != "" {
+		CORSOrigin = s.config.CORSOrigin
+	}
+
 	router := http.NewServeMux()
-	router.HandleFunc("/"+endpoint, processHandler(inputName, endpoint, s))
+	router.HandleFunc("/"+endpoint, processHandler(inputName, endpoint, CORSOrigin, s))
 
 	s.engine.SchedulePokes()
 
@@ -69,7 +74,7 @@ func (s *server) Run() error {
 	return err
 }
 
-func processHandler(inputName, endpoint string, s *server) func(http.ResponseWriter, *http.Request) {
+func processHandler(inputName, endpoint, CORSOrigin string, s *server) func(http.ResponseWriter, *http.Request) {
 	var errorText = inputName + " field is mandatory and can not be empty"
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -116,11 +121,19 @@ func processHandler(inputName, endpoint string, s *server) func(http.ResponseWri
 			}
 
 			w.Header().Set("Content-Type", "application/json")
+			addCORS(w, CORSOrigin)
 			w.WriteHeader(status)
 			resp, _ := json.Marshal(response)
 			w.Write(resp)
+		} else if r.Method == "OPTIONS" {
+			addCORS(w, CORSOrigin)
+			w.WriteHeader(http.StatusOK)
 		} else {
 			http.NotFound(w, r)
 		}
 	}
+}
+
+func addCORS(w http.ResponseWriter, origin string) {
+	w.Header().Set("Access-Control-Allow-Origin", origin)
 }

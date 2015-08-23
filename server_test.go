@@ -20,6 +20,7 @@ func makeRequestWithMethod(text string, port int, method string) (string, string
 		Port:           port,
 		Endpoint:       "get_data",
 		InputFieldName: "input",
+		CORSOrigin:     "*",
 	})
 
 	go func() {
@@ -97,6 +98,13 @@ func TestNotFound(t *testing.T) {
 	_, status := makeRequestWithMethod(`whatever`, 9097, "GET")
 	if status != "404 Not Found" {
 		t.Errorf("expected error 404, %s received", status)
+	}
+}
+
+func TestOptions(t *testing.T) {
+	_, status := makeRequestWithMethod(`whatever`, 9099, "OPTIONS")
+	if status != "200 OK" {
+		t.Errorf("expected status 200 OK, %s received", status)
 	}
 }
 
