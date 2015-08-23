@@ -136,4 +136,6 @@ func processHandler(inputName, endpoint, CORSOrigin string, s *server) func(http
 
 func addCORS(w http.ResponseWriter, origin string) {
 	w.Header().Set("Access-Control-Allow-Origin", origin)
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+	w.Header().Set("Access-Control-Allow-Method", "OPTIONS,POST")
 }
