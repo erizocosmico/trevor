@@ -121,12 +121,12 @@ func processHandler(inputName, endpoint, CORSOrigin string, s *server) func(http
 			}
 
 			w.Header().Set("Content-Type", "application/json")
-			addCORS(w, CORSOrigin)
+			addCORS(r, w, CORSOrigin)
 			w.WriteHeader(status)
 			resp, _ := json.Marshal(response)
 			w.Write(resp)
 		} else if r.Method == "OPTIONS" {
-			addCORS(w, CORSOrigin)
+			addCORS(r, w, CORSOrigin)
 			w.WriteHeader(http.StatusOK)
 		} else {
 			http.NotFound(w, r)
@@ -134,8 +134,8 @@ func processHandler(inputName, endpoint, CORSOrigin string, s *server) func(http
 	}
 }
 
-func addCORS(w http.ResponseWriter, origin string) {
+func addCORS(r *http.Request, w http.ResponseWriter, origin string) {
 	w.Header().Set("Access-Control-Allow-Origin", origin)
-	w.Header().Set("Access-Control-Allow-Headers", "*")
+	w.Header().Set("Access-Control-Allow-Headers", r.Header.Get("Access-Control-Request-Headers"))
 	w.Header().Set("Access-Control-Allow-Method", "OPTIONS,POST")
 }
